@@ -11,6 +11,8 @@ var hangmanGame = {
 	hangmanSize: 50,
 	hangmanSizeDefault: 50,
 	growthRate: 18,
+	worldVisible: 'visible',
+	explodeVisible: 'hidden',
 	scoreboard: {
 		wins:0,
 		losses:0,
@@ -77,21 +79,22 @@ var hangmanGame = {
 
 			} else {
 				//Wrong guess - grows size of the world, lowers life
-				this.growHangman()
+				this.growHangman();
 				this.livesLeft--;
 
 				//When life is 0 then end the game with a loss
 				if(this.livesLeft === 0){
-					this.scoreboard.losses++
-					this.gameStatus = false
-					this.message = 'Sorry, you lost and the world exploded!'
+					this.scoreboard.losses++;
+					this.gameStatus = false;
+					this.worldVisible = 'hidden';
+					this.hangmanSize = 0;
+					this.explodeVisible = 'visible';
+					this.message = 'Sorry, you lost and the world exploded!';
 				} 
 
 				this.renderGameState();
 			}
-			
 		}
-
 	},
 	
 	// This function renders game info to the DOM
@@ -102,8 +105,10 @@ var hangmanGame = {
 		document.getElementById('msg').innerHTML = this.message;
 		document.getElementById('wincount').innerHTML = this.scoreboard.wins;
 		document.getElementById('losscount').innerHTML = this.scoreboard.losses;
-		document.getElementById('resetcount').innerHTML = this.scoreboard.resets;
+		//document.getElementById('resetcount').innerHTML = this.scoreboard.resets;
+		document.getElementById('world').style.visibility = this.worldVisible;
 		document.getElementById('world').style.fontSize = this.hangmanSize + 'px';
+		document.getElementById('explode').style.visibility = this.explodeVisible;
 	},
 
 	// This function will put blank space for each letter in the current word being guessed
