@@ -1,13 +1,23 @@
 //Initialize the word libary and user input variables
-var wordLib = ['excited', 'happy', 'sad', 'confused', 'tired'];
+//var wordLib = ['excited', 'happy', 'sad', 'confused', 'tired'];
 var userInput = '';
-var i = 0;
 
 //Initialize the game object
 var hangmanGame = {
+	wordLib: {
+		emotions: ['excited', 'happy', 'sad', 'confused', 'tired'],
+		cities: ['phoenix', 'london', 'paris', 'chicago', 'boston', 'tokyo'],
+		states: ['utah', 'arizona', 'florida', 'georgia', 'montanta', 'california'],
+		kitchen: ['bowl', 'stove', 'oven', 'microwave', 'pan'],
+		food: ['hamburger', 'pizza', 'taco', 'steak', 'salad', 'apple', 'banana'],
+		countries: ['france', 'england', 'japan', 'egypt', 'china', 'india'],
+		baby: ['bottle', 'crib', 'crawl', 'cry'],
+		animals: ['dog', 'cat', 'zebra', 'monkey', 'bird', 'elephant', 'squirel']
+	},
+	librarySize: 0,
 	livesLeft: 10,
 	lifeLimit: 10,
-	currentWord: 'default',
+	currentWord: ['default','default'],
 	guessStatus: [],
 	guessed: [],
 	playedWords: [],
@@ -38,8 +48,8 @@ var hangmanGame = {
 	// function creates the current guess status display text i.e. 'ex__mple'
 	buildGuessStatus: function (input){
 		var curStat = this.guessStatus;
-		for(var i = 0; i < this.currentWord.length; i++){
-			if(this.currentWord[i] === input){
+		for(var i = 0; i < this.currentWord[0].length; i++){
+			if(this.currentWord[0][i] === input){
 				curStat[i] = input;
 			}
 		}
@@ -48,13 +58,28 @@ var hangmanGame = {
 
 	//When user resets game it calls this function which resets values and selects new word
 	reset: function (){
-		this.playedWords.push(this.currentWord);
+
+		//Runs on the first reset to determine the library size
+		if(this.librarySize === 0) {
+			this.librarySize = this.getLibSize(this.wordLib)
+		};
+
+		this.playedWords.push(this.currentWord[0]);
+		this.currentWord = this.getNewWord(this.wordLib, this.playedWords);
+
+		// prevents game from moving forward when there are no more words in the library.
+		if (this.currentWord === false) {
+			this.message = 'There are no more words in the Library'
+			this.message2 = 'Please refresh the page.'
+			this.renderGameState()
+			return undefined
+		}
+
 		this.livesLeft = this.lifeLimit;
-		this.currentWord = this.getNewWord(wordLib,this.playedWords);
 		this.guessed = [];
 		this.gameStatus = true;
 		this.message = 'Type any letter to get started.';
-		this.message2 = '-'
+		this.message2 = 'Hint: ' + this.currentWord[1]
 		this.hangmanSize = this.hangmanSizeDefault;
 		this.explodeSize = this.explodeSizeDefault;
 		this.explodeVisible = 'hidden';
@@ -62,16 +87,23 @@ var hangmanGame = {
 		this.explode = false;
 		this.clearBoard();
 		this.renderGameState();
-		console.log('Game was reset' + Date());
 	},
 
 	// Function will randomly select a word from the word library and return it excluding played words
 	getNewWord: function (wordLibrary, played){
-		var rdmWord = wordLibrary[Math.floor((Math.random() * wordLibrary.length))].toUpperCase();
-		if(played.indexOf(rdmWord) > -1){
-			this.getNewWord(wordLib, this.playedWords);
-		}
-		return rdmWord;
+		var categories = Object.keys(wordLibrary)
+		var randomKey = '';
+		var rdmWord = '';
+		
+		if((played.length - 2) >= this.librarySize){
+			return false;
+		};
+
+		while(played.indexOf(rdmWord) > -1){
+			randomKey = categories[Math.floor(Math.random() * (categories.length))];
+			rdmWord = wordLibrary[randomKey][Math.floor(Math.random() * wordLibrary[randomKey].length)].toUpperCase();
+		};
+		return [rdmWord, randomKey];		
 	},
 
 	// Main gameplay function called when user enters input
@@ -85,7 +117,7 @@ var hangmanGame = {
 		} else if (this.validChar.indexOf(input) > -1 && this.guessed.indexOf(input) === -1 && this.gameStatus === true){
 
 			//check if the guessed letter is in the current word
-			if (this.currentWord.indexOf(input) > -1){
+			if (this.currentWord[0].indexOf(input) > -1){
 				this.guessStatus = this.buildGuessStatus(input);
 				
 				//check if the user won the game on this guess and execute end of game calls
@@ -138,14 +170,14 @@ var hangmanGame = {
 	// This function will put blank space for each letter in the current word being guessed
 	clearBoard: function() {
 		this.guessStatus = [];
-		for(var i = 0; i < this.currentWord.length; i++){
+		for(var i = 0; i < this.currentWord[0].length; i++){
 			this.guessStatus.push(" _ ");
 		};
 	},
 
 	//checks if the state of the game is won or not
 	checkWin: function() {
-		if(this.currentWord === this.guessStatus.join('')){
+		if(this.currentWord[0] === this.guessStatus.join('')){
 			return true;
 		}
 		return false;
@@ -169,15 +201,29 @@ var hangmanGame = {
 			};
 			if(this.explodeSize > 200) {
 				//this.explodeSize = this.explodeSizeDefault;
+				this.explodeSize = 0
 				clearInterval(myVar)
 			};
 			this.renderGameState();
 		};
+	},
+
+	getLibSize: function (lib) {
+		var z = 0;
+		var libKeys = Object.keys(lib);
+		var valCounter = 0;
+		for(; z < libKeys.length ; z++ ){
+			valCounter += lib[libKeys[z]].length
+		}
+		return valCounter
 	}
 }
 
 //Loads game on page load
-document.onload = hangmanGame.reset()
+window.onload = function(){
+	hangmanGame.reset()
+	hangmanGame.reset()
+} ;
 
 //Listens for users input and passes to the game object for handling
 document.addEventListener('keydown', function(){
@@ -204,6 +250,5 @@ function gameLog() {
 	console.log("Earth Size: " + hangmanGame.hangmanSize);
 	console.log("Guessed Words: " + hangmanGame.playedWords.join(','))
 }*/
-
 
 
