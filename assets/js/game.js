@@ -1,6 +1,7 @@
 //Initialize the word libary and user input variables
 var wordLib = ['excited', 'happy', 'sad', 'confused', 'tired'];
 var userInput = '';
+var i = 0;
 
 //Initialize the game object
 var hangmanGame = {
@@ -22,9 +23,10 @@ var hangmanGame = {
 	message2: '-',
 	hangmanSize: 50,
 	explodeSize: 0,
+	explodeColor: 'yellow',
 	hangmanSizeDefault: 50,
 	explodeSizeDefault: 0,
-	explode: 200,
+	explode: false,
 	growthRate: 15,
 	worldVisible: 'visible',
 	explodeVisible: 'hidden',
@@ -57,6 +59,7 @@ var hangmanGame = {
 		this.explodeSize = this.explodeSizeDefault;
 		this.explodeVisible = 'hidden';
 		this.worldVisible = 'visible';
+		this.explode = false;
 		this.clearBoard();
 		this.renderGameState();
 		console.log('Game was reset' + Date());
@@ -107,9 +110,9 @@ var hangmanGame = {
 					this.worldVisible = 'hidden';
 					this.hangmanSize = 0;
 					this.explodeVisible = 'visible';
-					this.explodeSize = this.explode;
 					this.message = 'Sorry, you lost and the world exploded!';
-					this.message2 = 'Push the \'New Game \' button to play again.'
+					this.message2 = 'Push the \'New Game \' button to play again.';	
+					this.glow();				
 				} 
 			}
 		}
@@ -127,8 +130,9 @@ var hangmanGame = {
 		document.getElementById('losscount').innerHTML = this.scoreboard.losses;
 		document.getElementById('world').style.visibility = this.worldVisible;
 		document.getElementById('world').style.fontSize = this.hangmanSize + 'px';
+		document.getElementById('explode').style.fontSize = this.explodeSize + 'px'
 		document.getElementById('explode').style.visibility = this.explodeVisible;
-		document.getElementById('explode').style.fontSize = this.explodeSize + 'px';
+		document.getElementById('explode').style.color = this.explodeColor;
 	},
 
 	// This function will put blank space for each letter in the current word being guessed
@@ -150,6 +154,25 @@ var hangmanGame = {
 	//Increases the globe size by defined growth rate
 	growHangman: function (){
 		this.hangmanSize += this.growthRate;
+	},
+
+	//this function animates the explosion
+	glow: function () {
+		var myVar = setInterval(makeBoom.bind(this), 100);
+
+		function makeBoom() {
+			this.explodeSize += this.growthRate;
+			if (this.explodeColor === 'yellow'){
+				this.explodeColor = 'red';
+			} else {
+				this.explodeColor = 'yellow';
+			};
+			if(this.explodeSize > 200) {
+				//this.explodeSize = this.explodeSizeDefault;
+				clearInterval(myVar)
+			};
+			this.renderGameState();
+		};
 	}
 }
 
